@@ -54,6 +54,7 @@ userAddresses
 - postTime
 
 # EL userId se pone aca pues no necesariamente la direccion del que pidio la orden es la direccion a la que debe llegar. Desde Panama puedo pedir un envio a CR
+
 # ORDER ADDRESSES 
 orderAddresses
 - id (PK)
@@ -166,4 +167,310 @@ hubLocations
 - level varchar(20) 
 - checkSum BYTEA
 
-# TODO: todo lo demas BUUU (exchange pattern, incoterms, transactions etc)
+# =========================
+# CURRENCIES PATTERN
+# =========================
+
+# CURRENCIES
+currencies
+- id (PK) 
+- name varchar(20)
+- symbol
+- enabled BOOLEAN
+- postTime
+- userId (FK -> users.id)
+- countryId (FK -> countries.id)
+
+# EXCHANGERATES
+exchangeRates
+- id (PK)
+- fromCurrencyId (FK -> currencies.id)
+- toCurrencyId (FK -> currencies.id)
+- rate DECIMAL
+- date DATE
+- createdAt DATE
+- postTime
+- userId (FK -> users.id)
+- checkSum BYTEA
+
+# EXCHANGEHISTORY
+exchangeHistory
+- id (PK)
+- fromCurrencyId (FK -> currencies.id)
+- toCurrencyId (FK -> currencies.id)
+- rateToUsd DECIMAL
+- startDateTime DATE
+- endDateTime DATE
+- postTime
+- checkSum BYTEA
+- userId (FK -> users.id)
+- exchangeRateId (FK -> exchangeRates.id)
+
+# =========================
+# TRANSACCIONES FINANCIERAS
+# =========================
+
+# Justificacion: Se dice que debe estar prrsente en documento dado por el profe.
+
+# TRANSACTION TYPES
+transactionTypes
+- id (PK)
+- code (UNIQUE)   -- SALE, PURCHASE, SHIPPING_COST, TAX
+- description
+
+# TRANSACTIONS
+transactions
+- id (PK)
+- typeId (FK -> transactionTypes.id)
+- date DATE
+- description varchar(100)
+- amount   -- positivo ingreso, negativo egreso
+- currencyId (FK -> currencies.id)
+- relatedOrderId (FK -> orders.id)
+- createdBy (FK -> users.id)
+- createdAt DATE
+- checkSum BYTEA
+
+# 21 tablas hasta aca =(
+
+# =========================
+# PROVEEDORES
+# =========================
+
+# Suppliers
+suppliers
+- id (PK)
+- name varchar(100)
+- countryId (FK -> countries.id)
+- createdAt DATE
+- enabled BOOLEAN
+
+# supplierContacts
+supplierContacts
+- id (PK)
+- supplierId (FK -> suppliers.id)
+- contactName varchar(100)
+- email varchar(60)
+- phone NUMERICAL
+
+
+# =========================
+# PRODUCTOS
+# =========================
+
+# EL producto debe poseer su categoria, brand, supplier y proteccion
+
+# categorias 
+categories
+- id (PK)
+- name varchar(60)
+
+# brands
+brands
+- id (PK)
+- name varchar(60)
+- countryId (FK -> countries.id)
+
+# prodcuts
+products
+- id (PK)
+- name varchar(60)
+- categoryId (FK -> categories.id)
+- brandId (FK -> brands.id)
+- supplierId (FK -> suppliers.id)
+- checksum BYTEA
+- createdBy (FK -> users.id)
+- createdAt DATE
+
+
+# =========================
+# PRECIOS HISTORICOS
+# =========================
+
+# Se debe poseer el product prices 
+productPrices
+- id (PK)
+- productId (FK -> products.id)
+- price
+- currencyId (FK -> currencies.id)
+- validFrom
+- validTo
+- createdAt DATE
+
+
+# =========================
+# INVENTARIO Y LOTES
+# =========================
+
+# Debido a que son por lotes los productos, y Etheria se le indica cuanto debe entonces se va por Lotes
+# el precio esta congelado 
+
+# Product Lots
+# Debe poseer el monto y en la moneda original el lote
+productLots
+- id
+- productId (FK -> products.id)
+- supplierId (FK -> suppliers.id)
+- hubId (FK -> hubs.id)
+- quantity
+- unitCost
+- currencyId
+- arrivalDate
+- checksum
+- createdAt
+
+# Se decidio separar mejor, lo que contiene es las diferentes direcciones de los lotes. Dentro del HUB
+lotLocations
+- id (PK)
+- lotId (FK -> productLots.id)
+- hubLocationId (FK -> hubLocations.id)
+- quantity
+
+
+# Transformaciones que puede sufrir el lote
+# Debido a que en un HUB pueden suceder combinaciones o separaciones o accidentes se debe llevar un registro
+# de las transformaciones que sufre el lote entonces, esto es lo que soluciona estas 4 tablas
+
+# tipos de transformacion
+transformationTypes
+- id (PK)
+- code (UNIQUE)   -- SPLIT, MERGE, REPACK, LOSS, ADJUSTMENT
+- description varcha(40)
+
+# Trabsformations
+lotTransformations
+- id (PK)
+- transformationTypeId (FK -> transformationTypes.id)
+- performedBy (FK -> users.id)
+- timestamp
+- checkSum BYTEA
+# quiantity es cantidad del producto
+# Como un lote se puede separar en dos o mas entonces aca se da la informacion 
+# En esta entra un lote llamemoslo A (con 100 de cantidad de producto) su transformacion es tipo SPLIT hecha por Paco un abril 3
+
+# Inputs
+lotTransformationInputs
+- id (PK)
+- transformationId (FK → lotTransformations.id)
+- lotId (FK → productLots.id)
+- quantity
+
+# Luego se separa en dos partes uno B y C de diferente cantidad del mismo producto 60 y 40 respectivamente. Se traza la separacion.
+# Outputs
+lotTransformationOutputs
+- id (PK)
+- transformationId (FK → lotTransformations.id)
+- lotId (FK → productLots.id)
+- quantity
+
+
+# =========================
+# INCOTERMS
+# =========================
+
+incoterms
+- id (PK)
+- code varchar(10)
+- description varchar(100)
+
+
+# 34 HASTA ACA 
+# =========================
+# ORDENES
+# =========================
+
+# Ordenes
+
+ 
+orders
+- id (PK)
+- orderNumber
+- incotermId (FK -> incoterms.id)
+- orderDate
+- statusId (FK -> status.id)
+- discountAmount
+- taxAmount -- SUM de todas las taxes
+- totalAmount
+- currencyId (FK -> currencies.id)
+- createdBy (FK -> users.id)
+- createdAt
+
+# ESTADO
+status
+- id (PK)
+- code varchar(20)  -- Puerto etc
+
+# Items de la orden, la order puede poseer multiples suppliers, no se pone lote pues el lote se crea despues pues es un metodo de entrega.
+# Primero se piden los items, y luego se entregan en lotes del HUB y finalmente se envian asi, pero la orden solo se sabe que se pidieron x 
+# de tal producto
+
+orderItems
+- id (PK)
+- orderId (FK → orders.id)
+- productId (FK → products.id)
+- quantity
+- unitPrice
+- discount
+- orderItemTaxesId (FK -> orderItemsTaxes.id)
+- amount
+
+# Este posee las taxes especificas de los productos
+orderItemTaxes
+- id (PK)
+- orderItemId (FK -> orderItems.id)
+- taxTypeId (FK -> taxTypes.id)
+- percentage
+- amount
+
+
+# =========================
+# TRAZABILIDAD
+# =========================
+
+# Con esto el tracking posee
+# que transporta, su estatus, donde esta, quien lo lleva, a donde va al final, que incoterm posee
+# Ademas de ello el tracking posee indirectmente con lotShipments los lotes que se estan transportando.
+Tracking
+- id (PK)
+- orderId (FK -> orders.id)
+- orderAddressId (FK -> orderAddress.id)
+- statusId (FK -> status.id)
+- transportId  (FK -> transport.id)
+- handledBy (FK -> users.id)
+- transactionId (FK -> transaction.id)
+- timestamp
+- lotShipmentsId (FK -> lotShipments.id)
+
+# Emula los movimientos de transporte y de los tipos de transporte
+lotShipments
+- id (PK)
+- lotId (FK -> productLots.id)
+- transportId (FK -> transport.id)
+- fromAddressId (FK -> addresses.id)
+- toAddressId (FK -> addresses.id)
+- departureDate
+- arrivalDate
+- statusId (FK -> status.id)
+- trackingNumber
+
+# =========================
+# IMPUESTOS
+# =========================
+
+# Datos historicos de los paises
+
+taxTypes
+- id (PK)
+- code (UNIQUE)  -- VAT, IMPORT_DUTY, SALES_TAX
+- description
+
+countryTaxes
+- id (PK)
+- countryId (FK -> countries.id)
+- taxTypeId (FK -> taxTypes.id)
+- percentage
+- validFrom
+- validTo
+
+# BUUUU 42 ya agendo cita para ver que tal esta.
+
