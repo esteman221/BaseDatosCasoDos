@@ -19,26 +19,24 @@
 countries
 - id (PK)
 - name varchar(100) --pais mas largo contiene 50 caracteres
-- isoCode
-- createdAt DATE
 
 # STATES
 states
 - id (PK)
 - countryId (FK -> countries.id) 
-- name varchar (170) -- estado mas largo contiene 85 caracteres
+- name varchar(100) -- estado mas largo contiene 85 caracteres
 
 # CITIES
 cities
 - id (PK)
 - stateId (FK -> states.id) 
-- name (120) -- ciudad mas largo contiene 60 caracteres
+- name varchar(90) -- ciudad mas largo contiene 60 caracteres
 
 # ADDRESSES
 addresses
 - id (PK)
 - cityId (FK -> cities.id)
-- zipCode
+- zipCode varchar(10)
 - latitude  -- en cambio de la geoposicion se posee la latitud y longitud
 - longitude
 - createdBy (FK -> users.id)
@@ -120,6 +118,7 @@ users
 - contrasennia BYTEA -- proteccion
 - checkSum BYTEA -- proteccion (no me reganniaron de su existencia a si que lo pongo)
 - createdAt DATE
+- createdBy (FK -> users.id)
 
 
 
