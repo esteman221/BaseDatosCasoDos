@@ -7,7 +7,7 @@
 ## COUNTRIES
 countries
 - id (PK)
-- name varchar(100) --pais mas largo contiene 50 caracteres
+- name varchar(60) --pais mas largo contiene 50 caracteres
 - isoCode
 - createdAt DATE
 
@@ -15,13 +15,13 @@ countries
 states
 - id (PK)
 - countryId (FK -> countries.id) 
-- name varchar (170) -- estado mas largo contiene 85 caracteres
+- name varchar (100) -- estado mas largo contiene 85 caracteres
 
 # CITIES
 cities
 - id (PK)
 - stateId (FK -> states.id) 
-- name (120) -- ciudad mas largo contiene 60 caracteres
+- name (70) -- ciudad mas largo contiene 60 caracteres
 
 # ADDRESSES
 addresses
