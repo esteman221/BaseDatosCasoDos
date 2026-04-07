@@ -22,11 +22,23 @@ users
 # HUB (Centro de Distribucion Costero)
 # =========================
 
+# Justificacion de la existencia de estos Labels:
+# Una orden o address o importacion puede ir a distintas zonas en especifico, aunque pueden ser definidas por el incoterm, el incoterm posee
+# otras caracteristicas mas importantes fuera del destino final o tipo del orden. Estos tipos de orden u oficina definen y dejan de forma 
+# trazable lo que se realizo. Es decir, Se realizo una orden que es solo de SHIPPING, y se deja en el PICKUP_POINT del puerto X. El tipo de # incoterm fue FOB. Este incoterm solo da caracteristicas del contrato mas no caracteristicas del tipo de orden ni oficina.
+
+# HUB TYPES
+hubTypes
+- id (PK)
+- code varchar(20) (UNIQUE)   -- MAIN, WAREHOUSE, DISTRIBUTION_CENTER, PICKUP_POINT, RETURN_CENTER
+- description varchar(60)
+
 # HUBS
 hubs
 - id (PK)
 - name varchar(80)
 - capacity BIGINT
+- typeId (FK -> hubTypes.id)
 - createdBy (FK -> users.id)
 - createdAt DATE
 
@@ -71,23 +83,7 @@ addresses
 - createdBy (FK -> users.id)
 - createdAt DATE
 
-# Justificacion de la existencia de estos Labels:
-# Una orden o address o importacion puede ir a distintas zonas en especifico, aunque pueden ser definidas por el incoterm, el incoterm posee
-# otras caracteristicas mas importantes fuera del destino final o tipo del orden. Estos tipos de orden u oficina definen y dejan de forma 
-# trazable lo que se realizo. Es decir, Se realizo una orden que es solo de SHIPPING, y se deja en el PICKUP_POINT del puerto X. El tipo de # incoterm fue FOB. Este incoterm solo da caracteristicas del contrato mas no caracteristicas del tipo de orden ni oficina.
 
-# OFFICE TYPES
-officeTypes
-- id (PK)
-- code varchar(20) (UNIQUE)   -- MAIN, WAREHOUSE, DISTRIBUTION_CENTER, PICKUP_POINT, RETURN_CENTER
-- description varchar(60)
-
-# OFFICE ADDRESSES
-officeAddresses
-- id (PK)
-- hubId (FK -> hubs.id)
-- addressId (FK -> addresses.id)
-- typeId (FK -> officeTypes.id)
 
 # Order Addresses y Types esta con las OrderTables
 
@@ -109,7 +105,8 @@ supplierContacts
 - supplierId (FK -> suppliers.id)
 - contactName varchar(100)
 - email varchar(254)
-- phone NUMERICAL
+- phone varchar(15)
+- regionalCode varchar(3)
 
 # =========================
 # CURRENCIES PATTERN
@@ -158,13 +155,11 @@ exchangeHistory
 
 taxTypes
 - id (PK)
-- code varchar(20) (UNIQUE)  -- VAT, IMPORT_DUTY, SALES_TAX
-- description varchar(60)
+- code varchar(30) (UNIQUE)  -- VAT, IMPORT_DUTY, SALES_TAX
 
 countryTaxes
 - id (PK)
 - countryId (FK -> countries.id)
-- taxTypeId (FK -> taxTypes.id)
 - percentage DECIMAL
 - validFrom DATE
 - validTo DATE
@@ -184,16 +179,18 @@ taxes
 # TRANSPORT TYPE 
 transportType
 - id (PK)
-- code varchar(20) (UNIQUE) -- PLANE, BOAT, TRUCK
+- description varchar(20) (UNIQUE) -- PLANE, BOAT, TRUCK
 
 # TRANSPORT
 transport
 - id (PK)
 - transportTypeId (FK -> transportType.Id)
 - name varchar(100)
-- cityId (FK -> cities.id)
+- identifier varchar(100)
+- cityId (FK -> cities.id) allows null
 - contactEmail varchar(254) -- curiosamente este es el limite practico segun RFC 2821
-- phone NUMERICAL
+- phone varchar(15)
+- regionalCode varchar(3)
 
 
 # =========================
@@ -216,12 +213,12 @@ brands
 # QUANTITY TYPE
 quantityType
 - id (PK)
-- code varchar(20) (UNIQUE) -- bottles, pair
+- description varchar(20) (UNIQUE) -- bottles, pair
 
 # UNIT OF MEASUREMENT
 unitMeasurement
 - id (PK)
-- code varchar(20) (UNIQUE) -- cm, dl, om
+- description varchar(20) (UNIQUE) -- cm, dl, om
 
 # Se decidio meter el quantityTYpe dentro de productos, asi los lotes solo poseerian un quantity Numerical y no les importaria el tipo, pues ya esta en el producto.
 
@@ -229,7 +226,6 @@ unitMeasurement
 products
 - id (PK)
 - name varchar(60)
-- categoryId (FK -> categories.id)
 - brandId (FK -> brands.id)
 - supplierId (FK -> suppliers.id)
 - checksum BYTEA
@@ -238,6 +234,13 @@ products
 - unitMeasurement (FK -> unitMeasurement.id)
 - quantityType (FK -> quantityType)
 - enabled BOOLEAN
+
+# CATEGORYPERPRODUCT
+categoryperproduct
+- id (PK)
+- categoryId (FK -> categories.id)
+- productId (FK -> products.id)
+
 
 # =========================
 # PRECIOS HISTORICOS
@@ -343,12 +346,12 @@ status
  
 orders
 - id (PK)
-- orderNumber
+- orderNumber decimal
 - incotermId (FK -> incoterms.id)
 - orderDate DATE
 - statusId (FK -> status.id)
 - discountAmount DECIMAL
-- taxAmount -- SUM de todas las taxes de todos los items
+- taxAmount DECIMAL -- SUM de todas las taxes de todos los items
 - totalAmount DECIMAL
 - currencyId (FK -> currencies.id)
 - createdBy (FK -> users.id)
@@ -359,18 +362,18 @@ orders
 # Primero se piden los items, y luego se entregan en lotes del HUB y finalmente se envian asi, pero la orden solo se sabe que se pidieron x 
 # de tal producto
 
+# Este posee las taxes especificas de los productos
 orderItems
 - id (PK)
 - orderId (FK → orders.id)
 - productId (FK → products.id)
-- quantity NUMERICAL
+- quantity DECIMAL
 - unitPrice DECIMAL
 - discount DECIMAL
-- orderItemTaxesId (FK -> orderItemsTaxes.id)
 - amount DECIMAL
+- totalAmount DECIMAL -- SUM todas taxes del item
 - totalTaxes DECIMAL -- SUM todas taxes del item
 
-# Este posee las taxes especificas de los productos
 orderItemTaxes
 - id (PK)
 - orderItemId (FK -> orderItems.id)

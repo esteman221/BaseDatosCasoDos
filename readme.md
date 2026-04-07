@@ -1,3 +1,10 @@
+# v0.7
+    * Se eliminó offices, y se pasó el officeTypes a hubTypes
+    * Se agrega hubTypesId a la tabla Hub
+    * Cambio en supplierContacts, se cambió telefono y código regional
+    * Se quitó la descripción de taxTypes
+    * Secambió el formato de teléfono en TRANSPORT
+
 # v0.6
     * Corrección de readme
     * Agregación de tablas y mejora del formato de Markdown de Etherial Global
