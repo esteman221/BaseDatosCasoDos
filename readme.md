@@ -1,13 +1,18 @@
+# v0.6
+    * Corrección de readme
+    * Agregación de tablas y mejora del formato de Markdown de Etherial Global
+    * Agregación de tablas y mejora del formato de Markdown de Dynamic Brands
 
 # v0.5.2
     * Se agregó la información faltante al Readme
-    * Se cambiaron el tamaño de algunos campos de caracteres del Markdown de Etherial Global
-    
+    * Se cambiaron el tamaño de algunos campos de caracteres del Markdown de Dynamic Brands
+
 # v0.5.1
     * Se cambió el formato del readme
 
 # v0.5
     * Se implementó el readme
+    * Se cambiaron el tamaño de algunos campos de caracteres del Markdown de Etherial Global
 
 # v0.4
     * Se implemento el primer boceto del Markdown de Dynamic Brands

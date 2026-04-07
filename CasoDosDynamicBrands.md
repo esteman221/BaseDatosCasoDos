@@ -1,73 +1,48 @@
+# Mini log de cambios
+# * Se agregaron cosas de Etheria Necesarias para el funcionamiento de Dynamic
+# * Se ordeno de menos dependencia a mas dependencia 
+# * Se cambiaron los tamannios de los campos varchar
+# * Discutir con profesor que mas cosas necesarias de Etherial se requieren
+
 # =========================
 # Address Pattern
 # =========================
-
-# Es la creacion del address pattern
 
 ## COUNTRIES
 countries
 - id (PK)
 - name varchar(60) --pais mas largo contiene 50 caracteres
-- isoCode
-- createdAt DATE
 
 # STATES
 states
 - id (PK)
 - countryId (FK -> countries.id) 
-- name varchar (100) -- estado mas largo contiene 85 caracteres
+- name varchar(100) -- estado mas largo contiene 85 caracteres
 
 # CITIES
 cities
 - id (PK)
 - stateId (FK -> states.id) 
-- name (70) -- ciudad mas largo contiene 60 caracteres
+- name varchar(90) -- ciudad mas largo contiene 60 caracteres
 
 # ADDRESSES
 addresses
 - id (PK)
 - cityId (FK -> cities.id)
-- zipCode
+- zipCode varchar(10)
 - latitude  -- en cambio de la geoposicion se posee la latitud y longitud
 - longitude
 - createdBy (FK -> users.id)
 - createdAt DATE
 
-# Se requiere la direccion de la orden y su user
+# ===================
+# TRANSPORTE 
+# ===================
 
-# ORDER ADDRESSES 
-orderAddresses
+# TRANSPORT TYPE 
+transportType
 - id (PK)
-- orderId (FK -> orders.id)
-- senderAddressId (FK -> addresses.id)
-- receiverAddressId (FK -> addresses.id)
-- typeId (FK -> orderAddressTypes.id)
-- userId (FK -> usuarios.id)
-- postTime
-- active (BOOLEAN)
-
-# USER ADDRESSES
-userAddresses
-- id (PK)
-- userId (FK -> users.id)
-- addressId (FK -> addresses.id)
-- labelId (FK -> userAddressLabels.id)
-- isDefault (BOOLEAN)
-- active (BOOLEAN)
-- createdAt DATE
-- checkSum BYTEA --porteccion
-- postTime
-
-# Justificacion de la existencia de estos Labels:
-# A diferencia de Etherial este agarra o necesita solamente la direccion del usuario y la direccion del pedido para su track
-
-# ORDER ADDRESS TYPES
-orderAddressTypes
-- id (PK)
-- code varchar(20) (UNIQUE)   -- SHIPPING, BILLING
-- description varchar(100)
-
-# TRANSPORTE, pues a Dynamic Brands necesita el courier que le dara al usuario lo que pidio
+- code varchar(20) (UNIQUE) -- PLANE, BOAT, TRUCK
 
 # TRANSPORT
 transport
@@ -75,13 +50,88 @@ transport
 - transportTypeId (FK -> transportType.Id)
 - name varchar(100)
 - cityId (FK -> cities.id)
-- contactEmail varchar(100)
+- contactEmail varchar(254) -- curiosamente este es el limite practico segun RFC 2821
 - phone NUMERICAL
 
-# TRANSPORT TYPE 
-transportType
+# =========================
+# USUARIOS / AUDITORIA
+# =========================
+
+## USERS
+users
 - id (PK)
-- code varchar(20) -- PLANE, BOAT, TRUCK
+- name varchar (80)
+- email varchar (254)
+- contrasennia BYTEA -- proteccion
+- checkSum BYTEA -- proteccion (no me reganniaron de su existencia a si que lo pongo)
+- createdAt DATE
+- createdBy (FK -> users.id)
+- countryId (FK -> country.id)
+
+# USER ADDRESSES
+userAddresses
+- id (PK)
+- userId (FK -> users.id)
+- addressId (FK -> addresses.id)
+- isDefault (BOOLEAN)
+- active (BOOLEAN)
+- createdAt DATE
+- checkSum BYTEA --porteccion
+- postTime TIMESTAMP
+
+# ==========================
+# LOG IN (puse todo lo del profe, no obstante, revisa si se requiere todo en verdad, eso veremos tras la cita)
+# ==========================
+
+# Log types
+logTypes
+- id (PK)
+- code varchar(20) (UNIQUE)   -- USER, AI, SYSTEM, SECURITY
+- description varchar(100)
+
+# Event
+eventTypes
+- id (PK)
+- code varchar(20) (UNIQUE)   -- CREATE_ORDER, LOGIN, AI_GENERATION, UPDATE_PRICE
+- description varchar(100)
+
+# SEv
+severities
+- id (PK)
+- code varchar(20) (UNIQUE)   -- INFO, WARNING, ERROR, CRITICAL
+- level varchar(10)
+
+# Sources
+sources
+- id (PK)
+- code (UNIQUE)   -- BACKEND, FRONTEND, AI_ENGINE, API, BATCH
+- description varchar(100)
+
+# DataObjects
+dataObjects
+- id (PK)
+- code (UNIQUE)   -- USER, ORDER, PRODUCT, SITE, AI_MODEL
+- description varchar(100)
+
+# logs
+logs
+- id (PK)
+- logTypeId (FK -> logTypes.id)
+- eventTypeId (FK -> eventTypes.id)
+- severityId (FK -> severities.id)
+- sourceId (FK -> sources.id)
+- dataObjectId (FK -> dataObjects.id)
+- description varchar(100)
+- objectId1 BIGINT NULL
+- objectId2 BIGINT NULL
+- referenceId1 BIGINT NULL
+- referenceId2 BIGINT NULL
+- referenceDescription varchar(100)
+- userId (FK -> users.id, NULL)
+- computer BYTEA
+- checksum BYTEA
+- postTime TIMESTAMP
+
 
 # =========================
 # CURRENCIES PATTERN
@@ -91,9 +141,9 @@ transportType
 currencies
 - id (PK) 
 - name varchar(20)
-- symbol
+- symbol varchar(5)
 - enabled BOOLEAN
-- postTime
+- postTime TIMESTAMP
 - userId (FK -> users.id)
 - countryId (FK -> countries.id)
 
@@ -105,7 +155,7 @@ exchangeRates
 - rate DECIMAL
 - date DATE
 - createdAt DATE
-- postTime
+- postTime TIMESTAMP
 - userId (FK -> users.id)
 - checkSum BYTEA
 
@@ -117,43 +167,59 @@ exchangeHistory
 - rateToUsd DECIMAL
 - startDateTime DATE
 - endDateTime DATE
-- postTime
+- postTime TIMESTAMP
 - checkSum BYTEA
 - userId (FK -> users.id)
 - exchangeRateId (FK -> exchangeRates.id)
 
 # =========================
-# TRANSACCIONES FINANCIERAS
+# IMPUESTOS
 # =========================
 
-# TRANSACTIONS
-transactions
+# Datos historicos de los paises
+
+taxTypes
 - id (PK)
-- typeId (FK -> transactionTypes.id)
-- date DATE
-- description varchar(100)
-- amount 
-- currencyId (FK -> currencies.id)
-- relatedOrderId (FK -> orders.id)
-- doneBy (FK -> users.id)
-- createdAt DATE
-- checkSum BYTEA
+- code varchar(20) (UNIQUE)  -- VAT, IMPORT_DUTY, SALES_TAX
+- description varchar(60)
 
-# 13 Tablas
+countryTaxes
+- id (PK)
+- countryId (FK -> countries.id)
+- taxTypeId (FK -> taxTypes.id)
+- percentage DECIMAL
+- validFrom DATE
+- validTo DATE
 
-# ========================================
-# Cosas acorde al producto y ordenes
-# ==========================================
+taxes
+- id (PK)
+- taxTypeId (FK -> taxTypes.id)
+- countryTaxId (FK -> countryTaxes.id)
+
+
+# ===================
+# Producto
+# ===================
 
 # A diferencia de Etherial no le interesa los HUbs donde estan los lotes del producto, pero si le interesa de que HUB debe sacar X producto
+
+# =========================
+# HUB (Centro de Distribucion Costero)
+# =========================
 
 # HUBS
 hubs
 - id (PK)
-- name varchar(100)
-- capacity varchar (100)
+- name varchar(80)
+- capacity BIGINT
 - createdBy (FK -> users.id)
 - createdAt DATE
+
+# =========================
+# PRODUCTOS
+# =========================
+
+# EL producto debe poseer su categoria, brand, supplier y proteccion
 
 # categorias 
 categories
@@ -166,6 +232,18 @@ brands
 - name varchar(60)
 - countryId (FK -> countries.id)
 
+# QUANTITY TYPE
+quantityType
+- id (PK)
+- code varchar(20) (UNIQUE) -- bottles, pair
+
+# UNIT OF MEASUREMENT
+unitMeasurement
+- id (PK)
+- code varchar(20) (UNIQUE) -- cm, dl, om
+
+# Se decidio meter el quantityTYpe dentro de productos, asi los lotes solo poseerian un quantity Numerical y no les importaria el tipo, pues ya esta en el producto.
+
 # prodcuts
 products
 - id (PK)
@@ -176,6 +254,9 @@ products
 - checksum BYTEA
 - createdBy (FK -> users.id)
 - createdAt DATE
+- unitMeasurement (FK -> unitMeasurement.id)
+- quantityType (FK -> quantityType)
+- enabled BOOLEAN
 
 # =========================
 # PRECIOS HISTORICOS
@@ -185,28 +266,111 @@ products
 productPrices
 - id (PK)
 - productId (FK -> products.id)
-- price
+- price DECIMAL
 - currencyId (FK -> currencies.id)
-- validFrom
-- validTo
+- validFrom DATE
+- validTo DATE
 - createdAt DATE
 
 # A dynamic Brands solo le interesa la orden para enviarsela al usuario mediante su transporte
 
-# Orders
+# ===================
+# ESTADO
+# ====================
+status
+- id (PK)
+- code varchar(20) (UNIQUE) -- Puerto etc
+
+# =========================
+# ORDENES
+# =========================
+
+# Ordenes
+ 
 orders
 - id (PK)
 - orderNumber
-- orderDate
-- orderAddressId (FK -> orderAddress.id)
-- discountAmount
-- taxAmount 
-- totalAmount
+- orderDate DATE
+- statusId (FK -> status.id)
+- discountAmount DECIMAL
+- taxAmount -- SUM de todas las taxes de todos los items
+- totalAmount DECIMAL
 - currencyId (FK -> currencies.id)
-- requestedBy (FK -> users.id)
+- createdBy (FK -> users.id)
 - createdAt DATE
+- checkSum BYTEA
 
-# TRAZABILIDAD PARA ACTUALIZAR DONDE ESTA LA ORDEN Y MOSTRARSELO AL USUARIO
+# Items de la orden, la order puede poseer multiples suppliers, no se pone lote pues el lote se crea despues pues es un metodo de entrega.
+# Primero se piden los items, y luego se entregan en lotes del HUB y finalmente se envian asi, pero la orden solo se sabe que se pidieron x 
+# de tal producto
+
+orderItems
+- id (PK)
+- orderId (FK → orders.id)
+- productId (FK → products.id)
+- quantity NUMERICAL
+- unitPrice DECIMAL
+- discount DECIMAL
+- orderItemTaxesId (FK -> orderItemsTaxes.id)
+- amount DECIMAL
+- totalTaxes DECIMAL -- SUM todas taxes del item
+
+# Este posee las taxes especificas de los productos
+orderItemTaxes
+- id (PK)
+- orderItemId (FK -> orderItems.id)
+- taxesId (FK -> taxes.id)
+- totalAmount DECIMAL
+
+# ORDER ADDRESS TYPES
+orderAddressTypes
+- id (PK)
+- code varchar(20) (UNIQUE)   -- SHIPPING, BILLING
+- description varchar(60)
+
+# Justificacion de la existencia de estos Labels:
+# A diferencia de Etherial este agarra o necesita solamente la direccion del usuario y la direccion del pedido para su track
+
+# EL userId se pone aca pues no necesariamente la direccion del que pidio la orden es la direccion a la que debe llegar. Desde Panama puedo pedir un envio a CR
+# ORDER ADDRESSES 
+orderAddresses
+- id (PK)
+- orderId (FK -> orders.id)
+- senderAddressId (FK -> addresses.id)
+- receiverAddressId (FK -> addresses.id)
+- typeId (FK -> orderAddressTypes.id)
+- userId (FK -> usuarios.id)
+- postTime TIMESTAMP
+- active (BOOLEAN)
+
+# =========================
+# TRANSACCIONES FINANCIERAS
+# =========================
+
+# Justificacion: Se dice que debe estar prrsente en documento dado por el profe.
+
+# TRANSACTION TYPES
+transactionTypes
+- id (PK)
+- code varchar(20) (UNIQUE)   -- SALE, PURCHASE, SHIPPING_COST, TAX
+- description
+
+# TRANSACTIONS
+transactions
+- id (PK)
+- typeId (FK -> transactionTypes.id)
+- date DATE
+- description varchar(80)
+- amount DECIMAL   -- positivo ingreso, negativo egreso
+- currencyId (FK -> currencies.id)
+- relatedOrderId (FK -> orders.id)
+- createdBy (FK -> users.id)
+- createdAt DATE
+- checkSum BYTEA
+
+# ===============
+# TRAZABILIDAD 
+# ===============
 
 # Tracing
 Tracking
@@ -214,79 +378,8 @@ Tracking
 - orderId (FK -> orders.id)
 - transportId  (FK -> transport.id)
 - transactionId (FK -> transaction.id)
-- timestamp
+- timestamp TIMESTAMP
 
-# 20 Tablas hasta aca
-
-## USERS
-users
-- id (PK)
-- name varchar (100)
-- email varchar (100)
-- contrasennia BYTEA -- proteccion
-- checkSum BYTEA -- proteccion (no me reganniaron de su existencia a si que lo pongo)
-- createdAt DATE
-- countryId (FK -> country.id)
-
-# LOG IN (puse todo lo del profe, no obstante, revisa si se requiere todo en verdad, eso veremos tras la cita)
-
-# Log types
-logTypes
-- id (PK)
-- code (UNIQUE)   -- USER, AI, SYSTEM, SECURITY
-- description
-
-# Event
-eventTypes
-- id (PK)
-- code (UNIQUE)   -- CREATE_ORDER, LOGIN, AI_GENERATION, UPDATE_PRICE
-- description
-
-# SEv
-severities
-- id (PK)
-- code (UNIQUE)   -- INFO, WARNING, ERROR, CRITICAL
-- level
-
-# Sources
-sources
-- id (PK)
-- code (UNIQUE)   -- BACKEND, FRONTEND, AI_ENGINE, API, BATCH
-- description
-
-# DataObjects
-dataObjects
-- id (PK)
-- code (UNIQUE)   -- USER, ORDER, PRODUCT, SITE, AI_MODEL
-- description
-
-# logs
-logs
-- id (PK)
-
-- logTypeId (FK -> logTypes.id)
-- eventTypeId (FK -> eventTypes.id)
-- severityId (FK -> severities.id)
-- sourceId (FK -> sources.id)
-- dataObjectId (FK -> dataObjects.id)
-
-- description
-
-- objectId1 BIGINT NULL
-- objectId2 BIGINT NULL
-
-- referenceId1 BIGINT NULL
-- referenceId2 BIGINT NULL
-
-- referenceDescription
-
-- userId (FK -> users.id, NULL)
-- computer BYTEA
-- checksum BYTEA
-
-- postTime
-
-# 27 BUUU
 
 # =========================
 # SITIOS GENERADOS POR IA
@@ -294,26 +387,25 @@ logs
 
 sites
 - id (PK)
-- name
+- name varchar(100)
 - countryId (FK -> countries.id)
 - baseCurrencyId (FK -> currencies.id)
-- createdAt
+- createdAt DATE
+
+logo
+- id (PK)
+- code varchar(20) UNIQUE
+
+language
+- id (PK)
+- code varchar(20) UNIQUE
 
 siteConfigurations
 - id (PK)
 - siteId (FK -> sites.id)
 - logoUrl (FK -> logo.id)
-- theme
 - language (FK -> language.id)
-- createdAt
-
-logo
-- id (PK)
-- code varchar(20)
-
-language
-- id (PK)
-- code varchar(20) UNIQYUE
+- createdAt DATE
 
 # =========================
 # IA GENERADORA DE SITIOS
@@ -322,14 +414,14 @@ language
 aiModels
 - id (PK)
 - name varchar(20)
-- version 
+- version varchar(10)
 
 siteGeneration
 - id (PK)
 - modelId (FK -> aiModels.id)
 - countryId (FK -> countries.id)
 - inputParameters (JSON)  -- logo, enfoque, etc.
-- createdAt
+- createdAt DATE
 
 # =========================
 # DEMANDA HACIA ETHERIA
@@ -339,8 +431,7 @@ supplyRequests
 - id (PK)
 - productId (FK -> products.id)
 - countryId (FK -> countries.id)
-- requestedQuantity
+- requestedQuantity NUMERICAL
 - createdAt DATE
 - checksum BYTEA
 
-# 34 en total
