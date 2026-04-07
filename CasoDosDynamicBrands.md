@@ -49,9 +49,11 @@ transport
 - id (PK)
 - transportTypeId (FK -> transportType.Id)
 - name varchar(100)
-- cityId (FK -> cities.id)
+- identifier varchar(100)
+- cityId (FK -> cities.id) allows null
 - contactEmail varchar(254) -- curiosamente este es el limite practico segun RFC 2821
-- phone NUMERICAL
+- phone varchar(15)
+- regionalCode varchar(3)
 
 # =========================
 # USUARIOS / AUDITORIA
@@ -62,10 +64,9 @@ users
 - id (PK)
 - name varchar (80)
 - email varchar (254)
-- contrasennia BYTEA -- proteccion
+- contrasenna BYTEA -- proteccion
 - checkSum BYTEA -- proteccion (no me reganniaron de su existencia a si que lo pongo)
 - createdAt DATE
-- createdBy (FK -> users.id)
 - countryId (FK -> country.id)
 
 # USER ADDRESSES
@@ -80,7 +81,7 @@ userAddresses
 - postTime TIMESTAMP
 
 # ==========================
-# LOG IN (puse todo lo del profe, no obstante, revisa si se requiere todo en verdad, eso veremos tras la cita)
+# LOG (puse todo lo del profe, no obstante, revisa si se requiere todo en verdad, eso veremos tras la cita)
 # ==========================
 
 # Log types
@@ -207,11 +208,18 @@ taxes
 # HUB (Centro de Distribucion Costero)
 # =========================
 
+# HUB TYPES
+hubTypes
+- id (PK)
+- code varchar(20) (UNIQUE)   -- MAIN, WAREHOUSE, DISTRIBUTION_CENTER, PICKUP_POINT, RETURN_CENTER
+- description varchar(60)
+
 # HUBS
 hubs
 - id (PK)
 - name varchar(80)
 - capacity BIGINT
+- typeId (FK -> hubTypes.id)
 - createdBy (FK -> users.id)
 - createdAt DATE
 
@@ -248,7 +256,6 @@ unitMeasurement
 products
 - id (PK)
 - name varchar(60)
-- categoryId (FK -> categories.id)
 - brandId (FK -> brands.id)
 - hubId (FK -> hubs.id)
 - checksum BYTEA
@@ -257,6 +264,12 @@ products
 - unitMeasurement (FK -> unitMeasurement.id)
 - quantityType (FK -> quantityType)
 - enabled BOOLEAN
+
+# CATEGORYPERPRODUCT
+categoryperproduct
+- id (PK)
+- categoryId (FK -> categories.id)
+- productId (FK -> products.id)
 
 # =========================
 # PRECIOS HISTORICOS
@@ -281,6 +294,42 @@ status
 - id (PK)
 - code varchar(20) (UNIQUE) -- Puerto etc
 
+
+# =========================
+# SITIOS GENERADOS POR IA
+# =========================
+
+language
+- id (PK)
+- descripcion varchar(20) 
+
+aiModels
+- id (PK)
+- name varchar(20)
+- version varchar(10)
+
+sites
+- id (PK)
+- modelId (FK -> aiModels.id)
+- name varchar(100)
+- urlPhysicalDirection varchar(100)
+- ipPhysical varchar(100)
+- countryId (FK -> countries.id)
+- baseCurrencyId (FK -> currencies.id)
+- urlLogo varchar(20)
+- createdAt DATE
+- activo boolean
+
+languagespersite
+- siteId (FK -> sites.id)
+- languageId (FK -> language.id)
+
+# =========================
+# IA GENERADORA DE SITIOS
+# =========================
+
+
+
 # =========================
 # ORDENES
 # =========================
@@ -289,11 +338,11 @@ status
  
 orders
 - id (PK)
-- orderNumber
+- orderNumber decimal
 - orderDate DATE
 - statusId (FK -> status.id)
 - discountAmount DECIMAL
-- taxAmount -- SUM de todas las taxes de todos los items
+- taxAmount DECIMAL -- SUM de todas las taxes de todos los items
 - totalAmount DECIMAL
 - currencyId (FK -> currencies.id)
 - createdBy (FK -> users.id)
@@ -308,12 +357,13 @@ orderItems
 - id (PK)
 - orderId (FK → orders.id)
 - productId (FK → products.id)
-- quantity NUMERICAL
+- quantity DECIMAL
 - unitPrice DECIMAL
 - discount DECIMAL
-- orderItemTaxesId (FK -> orderItemsTaxes.id)
 - amount DECIMAL
+- totalAmount DECIMAL -- SUM todas taxes del item
 - totalTaxes DECIMAL -- SUM todas taxes del item
+
 
 # Este posee las taxes especificas de los productos
 orderItemTaxes
@@ -380,49 +430,6 @@ Tracking
 - transactionId (FK -> transaction.id)
 - timestamp TIMESTAMP
 
-
-# =========================
-# SITIOS GENERADOS POR IA
-# =========================
-
-sites
-- id (PK)
-- name varchar(100)
-- countryId (FK -> countries.id)
-- baseCurrencyId (FK -> currencies.id)
-- createdAt DATE
-
-logo
-- id (PK)
-- code varchar(20) UNIQUE
-
-language
-- id (PK)
-- code varchar(20) UNIQUE
-
-siteConfigurations
-- id (PK)
-- siteId (FK -> sites.id)
-- logoUrl (FK -> logo.id)
-- language (FK -> language.id)
-- createdAt DATE
-
-# =========================
-# IA GENERADORA DE SITIOS
-# =========================
-
-aiModels
-- id (PK)
-- name varchar(20)
-- version varchar(10)
-
-siteGeneration
-- id (PK)
-- modelId (FK -> aiModels.id)
-- countryId (FK -> countries.id)
-- inputParameters (JSON)  -- logo, enfoque, etc.
-- createdAt DATE
-
 # =========================
 # DEMANDA HACIA ETHERIA
 # =========================
@@ -434,4 +441,3 @@ supplyRequests
 - requestedQuantity NUMERICAL
 - createdAt DATE
 - checksum BYTEA
-

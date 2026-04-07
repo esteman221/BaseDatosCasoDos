@@ -1,3 +1,7 @@
+# v0.8
+    * Se hicieron los mismos cambios en la BD de DynamicBrands
+    * Se rediseñó la parte encargada de la generación de sitios con IA
+
 # v0.7
     * Se eliminó offices, y se pasó el officeTypes a hubTypes
     * Se agrega hubTypesId a la tabla Hub
