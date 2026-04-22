@@ -33,7 +33,7 @@ hubTypes
 - code varchar(20) (UNIQUE)   -- MAIN, WAREHOUSE, DISTRIBUTION_CENTER, PICKUP_POINT, RETURN_CENTER
 - description varchar(60)
 
-# HUBS
+# HUBS  -- supongo que mas adelante este hub tiene su address asociado al modelo de addresses REVISARREVISAR
 hubs
 - id (PK)
 - name varchar(80)
@@ -43,7 +43,7 @@ hubs
 - createdAt DATE
 
 # sitio donde esta el producto DENTRO de hub
-# HUBLOCATIONS
+# HUBLOCATIONS -- puede que al menos el zone haya que normalizarlo REVISARREVISAR
 hubLocations
 - id (PK)
 - hubId (FK -> hubs.id)
@@ -133,6 +133,7 @@ exchangeRates
 - postTime TIMESTAMP
 - userId (FK -> users.id)
 - checkSum BYTEA
+- iscurrent BOOLEAN
 
 # EXCHANGEHISTORY
 exchangeHistory
@@ -146,6 +147,7 @@ exchangeHistory
 - checkSum BYTEA
 - userId (FK -> users.id)
 - exchangeRateId (FK -> exchangeRates.id)
+- iscurrent BOOLEAN
 
 # =========================
 # IMPUESTOS
@@ -157,14 +159,14 @@ taxTypes
 - id (PK)
 - code varchar(30) (UNIQUE)  -- VAT, IMPORT_DUTY, SALES_TAX
 
-countryTaxes
+countryTaxes -- ponele un tipo y un flatflee null por si eventualmente hay taxes de monto fijo, no olvides el deleted y audit info  REVISARREVISAR
 - id (PK)
 - countryId (FK -> countries.id)
 - percentage DECIMAL
 - validFrom DATE
 - validTo DATE
 
-taxes
+taxes, -- deleted , auditinfo REVISARREVISAR
 - id (PK)
 - taxTypeId (FK -> taxTypes.id)
 - countryTaxId (FK -> countryTaxes.id)
@@ -181,7 +183,7 @@ transportType
 - id (PK)
 - description varchar(20) (UNIQUE) -- PLANE, BOAT, TRUCK
 
-# TRANSPORT
+# TRANSPORT -- no estoy totalmente seguro pero me paece que aqui estás mezclando el transporte, el que lo maneja y la ciudad donde esta; todo eso debería ser separado tienen comportamientos diferentes REVISARREVISAR
 transport
 - id (PK)
 - transportTypeId (FK -> transportType.Id)
@@ -222,7 +224,7 @@ unitMeasurement
 
 # Se decidio meter el quantityTYpe dentro de productos, asi los lotes solo poseerian un quantity Numerical y no les importaria el tipo, pues ya esta en el producto.
 
-# prodcuts
+# prodcuts , -- agreguemos un description más amplio y usa modelo de caracteristicas variables que asocias a las categorias tambien. metele el precio actual con currency y exchagerate para que no haya que ir a consultarlo al historico REVISARREVISAR
 products
 - id (PK)
 - name varchar(60)
@@ -264,9 +266,9 @@ productPrices
 # Debido a que son por lotes los productos, y Etheria se le indica cuanto debe entonces se va por Lotes
 # el precio esta congelado 
 
-# Product Lots
+# Product Lots -- maneja esto con patron de transacciones para que sea siempre insert REVISARREVISAR
 # Debe poseer el monto y en la moneda original el lote
-productLots
+productLots, 
 - id (PK)
 - productId (FK -> products.id)
 - supplierId (FK -> suppliers.id)
@@ -344,7 +346,7 @@ status
 
 # Ordenes
  
-orders
+orders -- no deberia estar esto asociado a un tax id  REVISARREVISAR
 - id (PK)
 - orderNumber decimal
 - incotermId (FK -> incoterms.id)
@@ -374,7 +376,7 @@ orderItems
 - totalAmount DECIMAL -- SUM todas taxes del item
 - totalTaxes DECIMAL -- SUM todas taxes del item
 
-orderItemTaxes
+orderItemTaxes .. aqui lo asociaste REVISARREVISAR
 - id (PK)
 - orderItemId (FK -> orderItems.id)
 - taxesId (FK -> taxes.id)
@@ -410,7 +412,7 @@ transactionTypes
 - code varchar(20) (UNIQUE)   -- SALE, PURCHASE, SHIPPING_COST, TAX
 - description
 
-# TRANSACTIONS
+# TRANSACTIONS .. agrega el exchange rate, objectt y referenceid REVISARREVISAR
 transactions
 - id (PK)
 - typeId (FK -> transactionTypes.id)

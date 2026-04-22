@@ -44,7 +44,7 @@ transportType
 - id (PK)
 - code varchar(20) (UNIQUE) -- PLANE, BOAT, TRUCK
 
-# TRANSPORT
+# TRANSPORT, -- lo mismo que el anterior, pero aqui nos interesa más el courier  REVISARREVISAR
 transport
 - id (PK)
 - transportTypeId (FK -> transportType.Id)
@@ -84,7 +84,7 @@ userAddresses
 # LOG (puse todo lo del profe, no obstante, revisa si se requiere todo en verdad, eso veremos tras la cita)
 # ==========================
 
-# Log types
+# Log types -- este modelo de logs te hizo falta en la otra REVISARREVISAR
 logTypes
 - id (PK)
 - code varchar(20) (UNIQUE)   -- USER, AI, SYSTEM, SECURITY
@@ -159,6 +159,7 @@ exchangeRates
 - postTime TIMESTAMP
 - userId (FK -> users.id)
 - checkSum BYTEA
+- iscurrent BOOLEAN
 
 # EXCHANGEHISTORY
 exchangeHistory
@@ -172,6 +173,7 @@ exchangeHistory
 - checkSum BYTEA
 - userId (FK -> users.id)
 - exchangeRateId (FK -> exchangeRates.id)
+- iscurrent BOOLEAN
 
 # =========================
 # IMPUESTOS
@@ -184,7 +186,7 @@ taxTypes
 - code varchar(20) (UNIQUE)  -- VAT, IMPORT_DUTY, SALES_TAX
 - description varchar(60)
 
-countryTaxes
+countryTaxes -- misma observacion que el otro modelo REVISARREVISAR
 - id (PK)
 - countryId (FK -> countries.id)
 - taxTypeId (FK -> taxTypes.id)
@@ -208,7 +210,7 @@ taxes
 # HUB (Centro de Distribucion Costero)
 # =========================
 
-# HUB TYPES
+# HUB TYPES -- para esta gente el hub es indiferente, ellos sabe q el producto está y que se los tienen q enviar nada mas no sabe como lo guardan REVISARREVISAR
 hubTypes
 - id (PK)
 - code varchar(20) (UNIQUE)   -- MAIN, WAREHOUSE, DISTRIBUTION_CENTER, PICKUP_POINT, RETURN_CENTER
@@ -252,7 +254,7 @@ unitMeasurement
 
 # Se decidio meter el quantityTYpe dentro de productos, asi los lotes solo poseerian un quantity Numerical y no les importaria el tipo, pues ya esta en el producto.
 
-# prodcuts
+# prodcuts, -- hace falta caracteristicas variables por categoria, fotografías, reviews, etc porque este es el ecommerce. Los productos pueden tener N presentaciones dependiendo de la tienda y asi cambian los precios monedas etc segun la tienda donde se publique cada producto.  REVISARREVISAR
 products
 - id (PK)
 - name varchar(60)
@@ -308,7 +310,7 @@ aiModels
 - name varchar(20)
 - version varchar(10)
 
-sites
+sites -- esto hay que ligarlo a los brands de productos por tienda, agrega una config json para los settings del site REVISARREVISAR
 - id (PK)
 - modelId (FK -> aiModels.id)
 - name varchar(100)

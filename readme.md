@@ -1,3 +1,7 @@
+# v0.9
+    * Se metieron los markdowns con los cambios hechos por el profesor
+    * Se realizaron algunos de los cambios, todavía faltan unos cuantos
+
 # v0.8
     * Se hicieron los mismos cambios en la BD de DynamicBrands
     * Se rediseñó la parte encargada de la generación de sitios con IA
