@@ -1,3 +1,7 @@
+# v.0.10
+    * Se realizaron en el markdown de Etherial Global todos los cambios pedidos por el profesor.
+    * Se realizaron en el markdown de Dynamic Brands todos los cambios pedidos por el profesor.
+    
 # v0.9
     * Se metieron los markdowns con los cambios hechos por el profesor
     * Se realizaron algunos de los cambios, todavía faltan unos cuantos

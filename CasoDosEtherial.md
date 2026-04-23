@@ -1,8 +1,5 @@
 # Mini log de cambios
-# * Se cambiaron los tamannios de los campos varchar
-# * Se ordeno todo el documento de menos dependiente a mas dependiente para evitar colapso
-# * Se agregaron las tablas Unit Of Measurement, Taxes y TypeQuantity
-# * Discutir necesidad de discount y discountTypes
+# Se hicieron las correcciones del profesor
 
 # =========================
 # USUARIOS / AUDITORIA
@@ -18,6 +15,59 @@ users
 - createdAt DATE
 - createdBy (FK -> users.id)
 
+# ==========================
+# LOG (Puesto por solicitud del profesor)
+# ==========================
+
+logTypes
+- id (PK)
+- code varchar(20) (UNIQUE)   -- USER, AI, SYSTEM, SECURITY
+- description varchar(100)
+
+# Event
+eventTypes
+- id (PK)
+- code varchar(20) (UNIQUE)   -- CREATE_ORDER, LOGIN, AI_GENERATION, UPDATE_PRICE
+- description varchar(100)
+
+# SEv
+severities
+- id (PK)
+- code varchar(20) (UNIQUE)   -- INFO, WARNING, ERROR, CRITICAL
+- level varchar(10)
+
+# Sources
+sources
+- id (PK)
+- code (UNIQUE)   -- BACKEND, FRONTEND, AI_ENGINE, API, BATCH
+- description varchar(100)
+
+# DataObjects
+dataObjects
+- id (PK)
+- code (UNIQUE)   -- USER, ORDER, PRODUCT, SITE, AI_MODEL
+- description varchar(100)
+
+# logs
+logs
+- id (PK)
+- logTypeId (FK -> logTypes.id)
+- eventTypeId (FK -> eventTypes.id)
+- severityId (FK -> severities.id)
+- sourceId (FK -> sources.id)
+- dataObjectId (FK -> dataObjects.id)
+- description varchar(100)
+- objectId1 BIGINT NULL
+- objectId2 BIGINT NULL
+- referenceId1 BIGINT NULL
+- referenceId2 BIGINT NULL
+- referenceDescription varchar(100)
+- userId (FK -> users.id, NULL)
+- computer BYTEA
+- checksum BYTEA
+- postTime TIMESTAMP
+
+
 # =========================
 # HUB (Centro de Distribucion Costero)
 # =========================
@@ -27,27 +77,36 @@ users
 # otras caracteristicas mas importantes fuera del destino final o tipo del orden. Estos tipos de orden u oficina definen y dejan de forma 
 # trazable lo que se realizo. Es decir, Se realizo una orden que es solo de SHIPPING, y se deja en el PICKUP_POINT del puerto X. El tipo de # incoterm fue FOB. Este incoterm solo da caracteristicas del contrato mas no caracteristicas del tipo de orden ni oficina.
 
+
 # HUB TYPES
 hubTypes
 - id (PK)
 - code varchar(20) (UNIQUE)   -- MAIN, WAREHOUSE, DISTRIBUTION_CENTER, PICKUP_POINT, RETURN_CENTER
 - description varchar(60)
 
-# HUBS  -- supongo que mas adelante este hub tiene su address asociado al modelo de addresses REVISARREVISAR
+# HUBS  
 hubs
 - id (PK)
 - name varchar(80)
 - capacity BIGINT
+- addressId (FK -> adresses.id)
 - typeId (FK -> hubTypes.id)
 - createdBy (FK -> users.id)
 - createdAt DATE
 
+# HUB ZONES
+hubZones
+- id (PK)
+- hubId (FK -> hub.id)
+- code varchar(20) (UNIQUE)   -- STORAGE, RECEIVING_AREA
+- description varchar(60)
+
 # sitio donde esta el producto DENTRO de hub
-# HUBLOCATIONS -- puede que al menos el zone haya que normalizarlo REVISARREVISAR
+# HUBLOCATIONS 
 hubLocations
 - id (PK)
 - hubId (FK -> hubs.id)
-- zone varchar(20) 
+- zone (FK -> zone.id)
 - rack varchar(20) 
 - level varchar(20) 
 - checkSum BYTEA
@@ -159,17 +218,30 @@ taxTypes
 - id (PK)
 - code varchar(30) (UNIQUE)  -- VAT, IMPORT_DUTY, SALES_TAX
 
-countryTaxes -- ponele un tipo y un flatflee null por si eventualmente hay taxes de monto fijo, no olvides el deleted y audit info  REVISARREVISAR
+countryTaxes 
 - id (PK)
 - countryId (FK -> countries.id)
-- percentage DECIMAL
+- percentage DECIMAL NULL 
+- flatflee DECIMAL NULL
 - validFrom DATE
 - validTo DATE
+- createdAt DATE
+- createdBy (FK -> users.id)
+- enabled BOOLEAN
+- updatedAt DATE
+- updatedBy (FK -> users.id)
 
-taxes, -- deleted , auditinfo REVISARREVISAR
+taxes
 - id (PK)
 - taxTypeId (FK -> taxTypes.id)
 - countryTaxId (FK -> countryTaxes.id)
+- validFrom DATE
+- validTo DATE
+- createdAt DATE
+- createdBy (FK -> users.id)
+- enabled BOOLEAN
+- updatedAt DATE
+- updatedBy (FK -> users.id)
 
 # ===================
 # TRANSPORTE 
@@ -178,21 +250,69 @@ taxes, -- deleted , auditinfo REVISARREVISAR
 # Para hacer escalabilidad se decidio simplificar puertos y aeropuertos en transporte y los couriers, por si deciden hacer un dia un 
 # uberImportacionEats O hacen avances tecnologicos (REVISALO)
 
-# TRANSPORT TYPE 
-transportType
-- id (PK)
-- description varchar(20) (UNIQUE) -- PLANE, BOAT, TRUCK
+# TRANSPORT 
 
-# TRANSPORT -- no estoy totalmente seguro pero me paece que aqui estás mezclando el transporte, el que lo maneja y la ciudad donde esta; todo eso debería ser separado tienen comportamientos diferentes REVISARREVISAR
-transport
+## TRANSPORT TYPES
+# Catálogo de tipos generales de transporte.
+
+transportTypes
 - id (PK)
-- transportTypeId (FK -> transportType.Id)
+- code varchar(20) (UNIQUE)   -- TRUCK, PLANE, BOAT, MOTORBIKE
+- description varchar(60)
+- createdAt DATE
+- createdBy (FK -> users.id)
+
+## CARRIERS
+# Empresa o entidad que presta el servicio logístico o de transporte.
+# Ejemplos: FedEx, DHL, Maersk, Correos de Costa Rica.
+
+carriers
+- id (PK)
 - name varchar(100)
-- identifier varchar(100)
-- cityId (FK -> cities.id) allows null
-- contactEmail varchar(254) -- curiosamente este es el limite practico segun RFC 2821
+- email varchar(254)
 - phone varchar(15)
 - regionalCode varchar(3)
+- addressId (FK -> addresses.id) allows null
+- enabled BOOLEAN
+- createdAt DATE
+- createdBy (FK -> users.id)
+- checkSum BYTEA
+
+## CARRIER LOCATIONS
+# Sedes, sucursales, terminales, puertos, aeropuertos o centros operativos
+# asociados a un carrier.
+# Un mismo carrier puede operar en varias ubicaciones.
+
+carrierLocations
+- id (PK)
+- carrierId (FK -> carriers.id)
+- addressId (FK -> addresses.id)
+- cityId (FK -> cities.id) allows null
+- code varchar(30) allows null
+- description varchar(80) allows null
+- enabled BOOLEAN
+- createdAt DATE
+- createdBy (FK -> users.id)
+
+## TRANSPORT UNITS
+# Unidad física específica utilizada para mover la carga.
+# Representa el medio concreto de transporte, no la empresa.
+# Ejemplos: camión con placa X, barco con código Y, avión con matrícula Z.
+
+transportUnits
+- id (PK)
+- carrierId (FK -> carriers.id)
+- transportTypeId (FK -> transportTypes.id)
+- identifier varchar(100) (UNIQUE)
+- name varchar(100) allows null
+- capacity DECIMAL allows null
+- unitMeasurementId (FK -> unitMeasurement.id) allows null
+- currentAddressId (FK -> addresses.id) allows null
+- enabled BOOLEAN
+- createdAt DATE
+- createdBy (FK -> users.id)
+- checkSum BYTEA
+
 
 
 # =========================
@@ -222,19 +342,33 @@ unitMeasurement
 - id (PK)
 - description varchar(20) (UNIQUE) -- cm, dl, om
 
+# PRODUCT CHARACTERISTICS (Pedido por profesor)
+# Catalogo de caracteristicas variables que puede tener un producto.
+# Ejemplo: color, material, tamaño, capacidad, RAM, CPU
+
+productCharacteristics
+- id (PK)
+- name varchar(60)
+
 # Se decidio meter el quantityTYpe dentro de productos, asi los lotes solo poseerian un quantity Numerical y no les importaria el tipo, pues ya esta en el producto.
 
-# prodcuts , -- agreguemos un description más amplio y usa modelo de caracteristicas variables que asocias a las categorias tambien. metele el precio actual con currency y exchagerate para que no haya que ir a consultarlo al historico REVISARREVISAR
+# prodcuts , -- agreguemos un description más amplio y usa modelo de caracteristicas variables que asocias a las categorias tambien. metele el precio actual con currency y exchagerate para que no haya que ir a consultarlo al historico 
 products
 - id (PK)
 - name varchar(60)
+- description varchar(500)
 - brandId (FK -> brands.id)
 - supplierId (FK -> suppliers.id)
+- currentPrice DECIMAL
+- currencyId (FK -> currencies.id)
+- exchangeRateId (FK -> exchangeRates.id)
 - checksum BYTEA
 - createdBy (FK -> users.id)
 - createdAt DATE
-- unitMeasurement (FK -> unitMeasurement.id)
-- quantityType (FK -> quantityType)
+- updatedBy (FK -> users.id) allows null
+- updatedAt DATE allows null
+- unitMeasurementId (FK -> unitMeasurement.id)
+- quantityTypeId (FK -> quantityType.id)
 - enabled BOOLEAN
 
 # CATEGORYPERPRODUCT
@@ -243,6 +377,15 @@ categoryperproduct
 - categoryId (FK -> categories.id)
 - productId (FK -> products.id)
 
+# PRODUCT CHARACTERISTIC PER PRODUCT
+# Relacion entre el producto y sus caracteristicas variables.
+# Producto Laptop -> RAM = 16GB (Para cumplir con lo pedido, creo que se hizo con esto)
+
+productCharacteristicPerProduct
+- id (PK)
+- productId (FK -> products.id)
+- productCharacteristicId (FK -> productCharacteristics.id)
+- value varchar(100)
 
 # =========================
 # PRECIOS HISTORICOS
@@ -266,9 +409,9 @@ productPrices
 # Debido a que son por lotes los productos, y Etheria se le indica cuanto debe entonces se va por Lotes
 # el precio esta congelado 
 
-# Product Lots -- maneja esto con patron de transacciones para que sea siempre insert REVISARREVISAR
+# Product Lots 
 # Debe poseer el monto y en la moneda original el lote
-productLots, 
+productLots 
 - id (PK)
 - productId (FK -> products.id)
 - supplierId (FK -> suppliers.id)
@@ -290,6 +433,35 @@ lotLocations
 # Transformaciones que puede sufrir el lote
 # Debido a que en un HUB pueden suceder combinaciones o separaciones o accidentes se debe llevar un registro
 # de las transformaciones que sufre el lote entonces, esto es lo que soluciona estas 4 tablas
+
+# LOT MOVEMENT TYPES
+# Tipos de movimientos que puede tener un lote. (Normalizacion)
+
+lotMovementTypes
+- id (PK)
+- code varchar(20) (UNIQUE)   -- IN, OUT, TRANSFER, ADJUSTMENT, RESERVE, RELEASE
+- description varchar(60)
+
+# LOT MOVEMENTS
+# Registra cada movimiento realizado sobre un lote sin modificar
+# el registro original de productLots.
+# Se maneja con enfoque append-only, donde cada cambio se guarda
+# como un nuevo registro mediante INSERT, manteniendo trazabilidad
+# completa del inventario y su historial. (agregado por el profe)
+
+lotMovements
+- id (PK)
+- lotId (FK -> productLots.id)
+- movementTypeId (FK -> lotMovementTypes.id)
+- fromHubLocationId (FK -> hubLocations.id) allows null
+- toHubLocationId (FK -> hubLocations.id) allows null
+- quantity DECIMAL
+- referenceType varchar(30) allows null
+- referenceId BIGINT allows null
+- timestamp TIMESTAMP
+- createdBy (FK -> users.id)
+- checkSum BYTEA
+
 
 # tipos de transformacion
 transformationTypes
@@ -346,7 +518,7 @@ status
 
 # Ordenes
  
-orders -- no deberia estar esto asociado a un tax id  REVISARREVISAR
+orders
 - id (PK)
 - orderNumber decimal
 - incotermId (FK -> incoterms.id)
@@ -376,7 +548,7 @@ orderItems
 - totalAmount DECIMAL -- SUM todas taxes del item
 - totalTaxes DECIMAL -- SUM todas taxes del item
 
-orderItemTaxes .. aqui lo asociaste REVISARREVISAR
+orderItemTaxes
 - id (PK)
 - orderItemId (FK -> orderItems.id)
 - taxesId (FK -> taxes.id)
@@ -410,17 +582,23 @@ orderAddresses
 transactionTypes
 - id (PK)
 - code varchar(20) (UNIQUE)   -- SALE, PURCHASE, SHIPPING_COST, TAX
-- description
+- description varchar(60)
+- createdAt DATE
+- createdBy (FK -> users.id)
 
-# TRANSACTIONS .. agrega el exchange rate, objectt y referenceid REVISARREVISAR
+# TRANSACTIONS (modificado segun profesor)
 transactions
 - id (PK)
 - typeId (FK -> transactionTypes.id)
 - date DATE
 - description varchar(80)
-- amount DECIMAL   -- positivo ingreso, negativo egreso
+- amount DECIMAL
 - currencyId (FK -> currencies.id)
-- relatedOrderId (FK -> orders.id)
+- exchangeRateId (FK -> exchangeRates.id)
+- relatedOrderId (FK -> orders.id) allows null
+- referenceType varchar(30) allows null
+- referenceId BIGINT allows null
+- externalReference varchar(80) allows null
 - createdBy (FK -> users.id)
 - createdAt DATE
 - checkSum BYTEA
@@ -433,24 +611,31 @@ transactions
 lotShipments
 - id (PK)
 - lotId (FK -> productLots.id)
-- transportId (FK -> transport.id)
+- carrierId (FK -> carriers.id)
+- transportUnitId (FK -> transportUnits.id) allows null
 - fromAddressId (FK -> addresses.id)
 - toAddressId (FK -> addresses.id)
 - departureDate DATE
-- arrivalDate DATE
+- estimatedArrivalDate DATE allows null
+- arrivalDate DATE allows null
 - statusId (FK -> status.id)
-- trackingNumber NUMERICAL
+- trackingNumber serial increment
+- createdAt DATE
+- createdBy (FK -> users.id)
+- checkSum BYTEA
 
 # Con esto el tracking posee
 # que transporta, su estatus, donde esta, quien lo lleva, a donde va al final, que incoterm posee
 # Ademas de ello el tracking posee indirectmente con lotShipments los lotes que se estan transportando.
-Tracking
+tracking
 - id (PK)
 - orderId (FK -> orders.id)
-- orderAddressId (FK -> orderAddress.id)
+- orderAddressId (FK -> orderAddresses.id)
 - statusId (FK -> status.id)
-- transportId  (FK -> transport.id)
+- carrierId (FK -> carriers.id) allows null
+- transportUnitId (FK -> transportUnits.id) allows null
 - handledBy (FK -> users.id)
-- transactionId (FK -> transaction.id)
+- transactionId (FK -> transactions.id) allows null
 - timestamp TIMESTAMP
-- lotShipmentsId (FK -> lotShipments.id)
+- lotShipmentId (FK -> lotShipments.id)
+- notes varchar(150) allows null

@@ -1,8 +1,5 @@
 # Mini log de cambios
-# * Se agregaron cosas de Etheria Necesarias para el funcionamiento de Dynamic
-# * Se ordeno de menos dependencia a mas dependencia 
-# * Se cambiaron los tamannios de los campos varchar
-# * Discutir con profesor que mas cosas necesarias de Etherial se requieren
+# Se hicieron las correcciones del profesor
 
 # =========================
 # Address Pattern
@@ -39,21 +36,71 @@ addresses
 # TRANSPORTE 
 # ===================
 
-# TRANSPORT TYPE 
-transportType
-- id (PK)
-- code varchar(20) (UNIQUE) -- PLANE, BOAT, TRUCK
+# Para hacer escalabilidad se decidio simplificar puertos y aeropuertos en transporte y los couriers, por si deciden hacer un dia un 
+# uberImportacionEats O hacen avances tecnologicos (REVISALO)
 
-# TRANSPORT, -- lo mismo que el anterior, pero aqui nos interesa más el courier  REVISARREVISAR
-transport
+# TRANSPORT 
+
+## TRANSPORT TYPES
+# Catálogo de tipos generales de transporte.
+
+transportTypes
 - id (PK)
-- transportTypeId (FK -> transportType.Id)
+- code varchar(20) (UNIQUE)   -- TRUCK, PLANE, BOAT, MOTORBIKE
+- description varchar(60)
+- createdAt DATE
+- createdBy (FK -> users.id)
+
+## CARRIERS
+# Empresa o entidad que presta el servicio logístico o de transporte.
+# Ejemplos: FedEx, DHL, Maersk, Correos de Costa Rica.
+
+carriers
+- id (PK)
 - name varchar(100)
-- identifier varchar(100)
-- cityId (FK -> cities.id) allows null
-- contactEmail varchar(254) -- curiosamente este es el limite practico segun RFC 2821
+- email varchar(254)
 - phone varchar(15)
 - regionalCode varchar(3)
+- addressId (FK -> addresses.id) allows null
+- enabled BOOLEAN
+- createdAt DATE
+- createdBy (FK -> users.id)
+- checkSum BYTEA
+
+## CARRIER LOCATIONS
+# Sedes, sucursales, terminales, puertos, aeropuertos o centros operativos
+# asociados a un carrier.
+# Un mismo carrier puede operar en varias ubicaciones.
+
+carrierLocations
+- id (PK)
+- carrierId (FK -> carriers.id)
+- addressId (FK -> addresses.id)
+- cityId (FK -> cities.id) allows null
+- code varchar(30) allows null
+- description varchar(80) allows null
+- enabled BOOLEAN
+- createdAt DATE
+- createdBy (FK -> users.id)
+
+## TRANSPORT UNITS
+# Unidad física específica utilizada para mover la carga.
+# Representa el medio concreto de transporte, no la empresa.
+# Ejemplos: camión con placa X, barco con código Y, avión con matrícula Z.
+
+transportUnits
+- id (PK)
+- carrierId (FK -> carriers.id)
+- transportTypeId (FK -> transportTypes.id)
+- identifier varchar(100) (UNIQUE)
+- name varchar(100) allows null
+- capacity DECIMAL allows null
+- unitMeasurementId (FK -> unitMeasurement.id) allows null
+- currentAddressId (FK -> addresses.id) allows null
+- enabled BOOLEAN
+- createdAt DATE
+- createdBy (FK -> users.id)
+- checkSum BYTEA
 
 # =========================
 # USUARIOS / AUDITORIA
@@ -84,7 +131,7 @@ userAddresses
 # LOG (puse todo lo del profe, no obstante, revisa si se requiere todo en verdad, eso veremos tras la cita)
 # ==========================
 
-# Log types -- este modelo de logs te hizo falta en la otra REVISARREVISAR
+# Log types 
 logTypes
 - id (PK)
 - code varchar(20) (UNIQUE)   -- USER, AI, SYSTEM, SECURITY
@@ -183,21 +230,32 @@ exchangeHistory
 
 taxTypes
 - id (PK)
-- code varchar(20) (UNIQUE)  -- VAT, IMPORT_DUTY, SALES_TAX
-- description varchar(60)
+- code varchar(30) (UNIQUE)  -- VAT, IMPORT_DUTY, SALES_TAX
 
-countryTaxes -- misma observacion que el otro modelo REVISARREVISAR
+countryTaxes 
 - id (PK)
 - countryId (FK -> countries.id)
-- taxTypeId (FK -> taxTypes.id)
-- percentage DECIMAL
+- percentage DECIMAL NULL 
+- flatflee DECIMAL NULL
 - validFrom DATE
 - validTo DATE
+- createdAt DATE
+- createdBy (FK -> users.id)
+- enabled BOOLEAN
+- updatedAt DATE
+- updatedBy (FK -> users.id)
 
 taxes
 - id (PK)
 - taxTypeId (FK -> taxTypes.id)
 - countryTaxId (FK -> countryTaxes.id)
+- validFrom DATE
+- validTo DATE
+- createdAt DATE
+- createdBy (FK -> users.id)
+- enabled BOOLEAN
+- updatedAt DATE
+- updatedBy (FK -> users.id)
 
 
 # ===================
@@ -210,7 +268,7 @@ taxes
 # HUB (Centro de Distribucion Costero)
 # =========================
 
-# HUB TYPES -- para esta gente el hub es indiferente, ellos sabe q el producto está y que se los tienen q enviar nada mas no sabe como lo guardan REVISARREVISAR
+# HUB TYPES -- REVISAR? Ya deberia estar manteniendo un disenno simple, pero no se. 
 hubTypes
 - id (PK)
 - code varchar(20) (UNIQUE)   -- MAIN, WAREHOUSE, DISTRIBUTION_CENTER, PICKUP_POINT, RETURN_CENTER
@@ -229,14 +287,17 @@ hubs
 # PRODUCTOS
 # =========================
 
-# EL producto debe poseer su categoria, brand, supplier y proteccion
+# EL producto debe poseer su categoria, brand, supplier y proteccion.
+# Como este modulo funciona como ecommerce, el producto necesita
+# caracteristicas variables, descripcion amplia y precio actual.
+# El historico de precios se mantiene aparte en productPrices.
 
-# categorias 
+# CATEGORIES
 categories
 - id (PK)
 - name varchar(60)
 
-# brands
+# BRANDS
 brands
 - id (PK)
 - name varchar(60)
@@ -252,32 +313,115 @@ unitMeasurement
 - id (PK)
 - code varchar(20) (UNIQUE) -- cm, dl, om
 
-# Se decidio meter el quantityTYpe dentro de productos, asi los lotes solo poseerian un quantity Numerical y no les importaria el tipo, pues ya esta en el producto.
+# PRODUCT CHARACTERISTICS
+# Catalogo de caracteristicas variables que puede tener un producto.
+# Ejemplo: color, material, tamaño, capacidad, RAM, CPU
 
-# prodcuts, -- hace falta caracteristicas variables por categoria, fotografías, reviews, etc porque este es el ecommerce. Los productos pueden tener N presentaciones dependiendo de la tienda y asi cambian los precios monedas etc segun la tienda donde se publique cada producto.  REVISARREVISAR
+productCharacteristics
+- id (PK)
+- name varchar(60)
+
+# Se decidio meter el quantityType dentro de products,
+# asi los lotes solo poseerian un quantity numerical
+# y no les importaria el tipo, pues ya esta en el producto.
+
+# PRODUCTS
+# Se agrega una descripcion mas amplia.
+# Se agrega el precio actual con moneda y tipo de cambio
+# para no tener que consultarlo siempre en el historico.
+# Las caracteristicas variables se manejan mediante
+# productCharacteristicPerProduct.
+
 products
 - id (PK)
 - name varchar(60)
+- description varchar(500)
 - brandId (FK -> brands.id)
+- supplierId (FK -> suppliers.id)
 - hubId (FK -> hubs.id)
+- currentPrice DECIMAL
+- currencyId (FK -> currencies.id)
+- exchangeRateId (FK -> exchangeRates.id)
 - checksum BYTEA
 - createdBy (FK -> users.id)
 - createdAt DATE
-- unitMeasurement (FK -> unitMeasurement.id)
-- quantityType (FK -> quantityType)
+- updatedBy (FK -> users.id) allows null
+- updatedAt DATE allows null
+- unitMeasurementId (FK -> unitMeasurement.id)
+- quantityTypeId (FK -> quantityType.id)
 - enabled BOOLEAN
 
-# CATEGORYPERPRODUCT
+# CATEGORY PER PRODUCT
 categoryperproduct
 - id (PK)
 - categoryId (FK -> categories.id)
 - productId (FK -> products.id)
 
+# PRODUCT CHARACTERISTIC PER PRODUCT
+# Relacion entre el producto y sus caracteristicas variables.
+# Ejemplo: Laptop -> RAM = 16GB
+
+productCharacteristicPerProduct
+- id (PK)
+- productId (FK -> products.id)
+- productCharacteristicId (FK -> productCharacteristics.id)
+- value varchar(100)
+
+# PRODUCT PUBLICATIONS
+# Un mismo producto puede tener distintas publicaciones
+# segun la tienda o sitio donde se publique,
+# cambiando precio, moneda, presentacion o estado.
+
+productPublications
+- id (PK)
+- productId (FK -> products.id)
+- siteId (FK -> sites.id)
+- name varchar(60)
+- description varchar(500) allows null
+- price DECIMAL
+- currencyId (FK -> currencies.id)
+- exchangeRateId (FK -> exchangeRates.id) allows null
+- urlImage varchar(255) allows null
+- active BOOLEAN
+- createdAt DATE
+- updatedAt DATE allows null
+
+# balance un producto puede tener muchas publicaciones
+publicationsPerProduct
+- id (PK)
+- publicationId (FK -> publications.id)
+- productId (FK -> products.id)
+
+# PRODUCT IMAGES
+# Fotografias del producto para el ecommerce.
+
+productImages
+- id (PK)
+- productPublicationId (FK -> productsPublications.id)
+- url varchar(255)
+- altText varchar(100) allows null
+- isMain BOOLEAN
+- createdAt DATE
+
+# PRODUCT REVIEWS
+# Resenas u opiniones dejadas por usuarios sobre el producto.
+
+productReviews
+- id (PK)
+- productPublicationId (FK -> productsPublications.id)
+- userId (FK -> users.id)
+- rating DECIMAL
+- comment varchar(500) allows null
+- createdAt DATE
+- enabled BOOLEAN
+
+# Se esta pensando que los reviews estan asociados a una sola publicacion  igual las imagenes
 # =========================
 # PRECIOS HISTORICOS
 # =========================
 
-# Se debe poseer el product prices 
+# Se debe poseer el product prices
+
 productPrices
 - id (PK)
 - productId (FK -> products.id)
@@ -286,6 +430,7 @@ productPrices
 - validFrom DATE
 - validTo DATE
 - createdAt DATE
+- updatedBy (FK -> users.id) allows null
 
 # A dynamic Brands solo le interesa la orden para enviarsela al usuario mediante su transporte
 
@@ -301,16 +446,19 @@ status
 # SITIOS GENERADOS POR IA
 # =========================
 
+# LANGUAGES
 language
 - id (PK)
-- descripcion varchar(20) 
+- description varchar(20)
 
+# AI MODELS
 aiModels
 - id (PK)
 - name varchar(20)
 - version varchar(10)
 
-sites -- esto hay que ligarlo a los brands de productos por tienda, agrega una config json para los settings del site REVISARREVISAR
+# SITES (site config se agrego por el profesor)
+sites
 - id (PK)
 - modelId (FK -> aiModels.id)
 - name varchar(100)
@@ -318,19 +466,26 @@ sites -- esto hay que ligarlo a los brands de productos por tienda, agrega una c
 - ipPhysical varchar(100)
 - countryId (FK -> countries.id)
 - baseCurrencyId (FK -> currencies.id)
-- urlLogo varchar(20)
+- urlLogo varchar(100)
+- siteConfig JSONB 
 - createdAt DATE
-- activo boolean
+- active BOOLEAN
 
-languagespersite
+languagesPerSite
+- id (PK)
 - siteId (FK -> sites.id)
 - languageId (FK -> language.id)
 
-# =========================
-# IA GENERADORA DE SITIOS
-# =========================
+# BRANDS PER SITE
+# Relacion entre los sitios ecommerce y las marcas que publica cada tienda.
+# No todas las marcas se venden en todos los sitios.
 
-
+brandsPerSite
+- id (PK)
+- siteId (FK -> sites.id)
+- brandId (FK -> brands.id)
+- enabled BOOLEAN
+- createdAt DATE
 
 # =========================
 # ORDENES
