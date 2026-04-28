@@ -1,0 +1,94 @@
+
+services:
+
+    
+
+    # https://hub.docker.com/_/postgres/
+    postgres:
+        image: postgres:18
+        restart: always
+        ports:
+            - "5432:5432"
+        environment:
+            POSTGRES_USER: admin
+            POSTGRES_PASSWORD: 123
+            POSTGRES_DB: EtheriaCasoDos
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+
+
+    # https://docs.docker.com/guides/pgadmin/
+    pgadmin:
+        image: dpage/pgadmin4:9.8
+        restart: always
+        environment:
+            # Para ingresar
+            PGADMIN_DEFAULT_EMAIL: admin@correo.com
+            PGADMIN_DEFAULT_PASSWORD: 123
+
+            # Don't require the user to login
+            PGADMIN_CONFIG_SERVER_MODE: 'False'
+
+            # Don't require a "master" password after logging in
+            PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+        ports:
+            - "80:80"
+        depends_on:
+            - postgres
+
+    
+    # https://hub.docker.com/_/mysql
+    mysql:
+        image: mysql
+        restart: always
+        ports:
+            - "3306:3306"
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_USER: admin
+            MYSQL_PASSWORD: 123
+            MYSQL_DATABASE: DynamicBrandsCasoDos
+
+
+
+    # https://hub.docker.com/_/phpmyadmin
+    phpmyadmin:
+        image: phpmyadmin:latest
+        restart: always
+        ports:
+            - "8888:80"
+        depends_on:
+        - mysql
+        environment:
+            # when set to 1 connection to the arbitrary server will be allowed
+            PMA_ARBITRARY: 1
+            # define address/host name of the MySQL server
+            PMA_HOST: mysql
+            # define port of the MySQL server
+            PMA_PORT: 3306
+            # This variable is mandatory and specifies the password that will be set for the root superuser account
+            MYSQL_ROOT_PASSWORD: root
+            # These variables are optional, used in conjunction to create a new user and to set that user's password.
+            MYSQL_USER: admin
+            MYSQL_PASSWORD : 123
+
+volumes:
+    postgres_data:
+
+
+            
+
+
+    
+         
+
+
+    
+
+
+
+
+
+
+
+

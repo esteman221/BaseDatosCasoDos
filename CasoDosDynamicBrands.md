@@ -560,17 +560,23 @@ orderAddresses
 transactionTypes
 - id (PK)
 - code varchar(20) (UNIQUE)   -- SALE, PURCHASE, SHIPPING_COST, TAX
-- description
+- description varchar(60)
+- createdAt DATE
+- createdBy (FK -> users.id)
 
-# TRANSACTIONS
+# TRANSACTIONS (modificado segun profesor)
 transactions
 - id (PK)
 - typeId (FK -> transactionTypes.id)
 - date DATE
 - description varchar(80)
-- amount DECIMAL   -- positivo ingreso, negativo egreso
+- amount DECIMAL
 - currencyId (FK -> currencies.id)
-- relatedOrderId (FK -> orders.id)
+- exchangeRateId (FK -> exchangeRates.id)
+- relatedOrderId (FK -> orders.id) allows null
+- referenceType varchar(30) allows null
+- referenceId BIGINT allows null
+- externalReference varchar(80) allows null
 - createdBy (FK -> users.id)
 - createdAt DATE
 - checkSum BYTEA

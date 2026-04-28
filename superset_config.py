@@ -1,0 +1,8 @@
+TALISMAN_ENABLED = False
+
+HTTP_HEADERS={"X-Frame-Options":"ALLOWALL"}
+
+FEATURE_FLAGS = {"EMBEDDED_SUPERSET": True}
+
+SECRET_KEY = "CasoDos"
+

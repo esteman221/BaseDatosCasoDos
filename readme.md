@@ -1,3 +1,13 @@
+# v.1.0
+    * Se terminaron de implementar los cambios del profesor
+    * Se agregó el archivo .yml del docker-compose con las siguientes imágenes
+    *   - apache/Superset (para dasborads y BI) (aún no funciona)
+    *   - PostgreSQL (BD para Etheria)
+    *   - MySql (BD para DynamicBrands)
+    *   - phpMyAdmin (para gestionar MySql)
+    *   - pgAdmin (para gestionar PostgreSQL)
+    * Se agregó el Manual de instalación 
+
 # v.0.10
     * Se realizaron en el markdown de Etherial Global todos los cambios pedidos por el profesor.
     * Se realizaron en el markdown de Dynamic Brands todos los cambios pedidos por el profesor.
