@@ -6,7 +6,7 @@ sleep 10
 superset db upgrade
 
 #Create an admin user
-superset fab create—admin \
+superset fab create-admin \
     --username admin \
     --firstname Admin \
     --lastname User \
