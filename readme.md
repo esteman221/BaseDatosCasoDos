@@ -1,9 +1,13 @@
+# v.1.2.3
+    * Se subieron los archivos .zip para la importaciones del dashboard y conexion a Trino para superset.
+    * Se modificó el Sql de llenado de datos y views para Dynamic Brands.
+    * Se agregó el Sql para la creacion de las views en Trino.
 # v.1.2.1
     * Se subió el readme.
 # v.1.2
-    * Se unio el docker entero.
+    * Se unió el docker entero.
     * Se agregaron properties para trino
-    * Se agrego trino al docker compose
+    * Se agregó trino al docker compose
     
 # v.1.1.1
     * Se subió el readme.

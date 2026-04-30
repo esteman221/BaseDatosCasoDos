@@ -1,5 +1,3 @@
-
-
 -- ============================================================
 -- SOURCE: 06_dynamicbrands_data_load_procedures_mysql_FIXED.sql
 -- ============================================================
@@ -436,6 +434,99 @@ BEGIN
 END $$
 
 
+
+
+-- ============================================================
+-- SP transaccional: cargar publicaciones de productos
+-- Necesario para que vw_dynamic_sales tenga datos.
+-- ============================================================
+
+DROP PROCEDURE IF EXISTS sp_seed_dynamicbrands_product_publications $$
+CREATE PROCEDURE sp_seed_dynamicbrands_product_publications()
+BEGIN
+    DECLARE v_inserted INT DEFAULT 0;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        CALL sp_seed_log_step(
+            'sp_seed_dynamicbrands_product_publications',
+            'product_publications',
+            'ERROR',
+            NULL,
+            'ERROR',
+            'Error insertando publicaciones'
+        );
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    CALL sp_seed_log_step(
+        'sp_seed_dynamicbrands_product_publications',
+        'product_publications',
+        'START',
+        NULL,
+        'OK',
+        'Inicio'
+    );
+
+    INSERT INTO product_publications (
+        product_id,
+        site_id,
+        name,
+        description,
+        price,
+        currency_id,
+        exchange_rate_id,
+        url_image,
+        active,
+        created_at,
+        updated_at
+    )
+    SELECT
+        p.id,
+        s.id,
+        CONCAT(p.name, ' - ', s.name),
+        CONCAT('Publicacion generada para ', p.name),
+        ROUND(p.current_price * (1.25 + RAND()), 2),
+        s.base_currency_id,
+        NULL,
+        CONCAT('https://example.com/images/product-', p.id, '.png'),
+        TRUE,
+        CURRENT_DATE,
+        NULL
+    FROM products p
+    JOIN sites s
+        ON MOD(p.id, 9) = MOD(s.id, 9)
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM product_publications pp
+        WHERE pp.product_id = p.id
+          AND pp.site_id = s.id
+    );
+
+    SET v_inserted = ROW_COUNT();
+
+    INSERT IGNORE INTO publications_per_product(publication_id, product_id)
+    SELECT
+        pp.id,
+        pp.product_id
+    FROM product_publications pp;
+
+    CALL sp_seed_log_step(
+        'sp_seed_dynamicbrands_product_publications',
+        'product_publications',
+        'INSERT',
+        v_inserted,
+        'OK',
+        'Publicaciones creadas para alimentar la vista del dashboard'
+    );
+
+    COMMIT;
+END $$
+
+
 DROP PROCEDURE IF EXISTS sp_seed_dynamicbrands_all $$
 CREATE PROCEDURE sp_seed_dynamicbrands_all()
 BEGIN
@@ -445,6 +536,7 @@ BEGIN
     CALL sp_seed_dynamicbrands_required_catalogs();
     CALL sp_seed_dynamicbrands_products_100();
     CALL sp_seed_dynamicbrands_sites_9();
+    CALL sp_seed_dynamicbrands_product_publications();
 
     CALL sp_seed_log_step('sp_seed_dynamicbrands_all','all','END',NULL,'OK','Carga completa DynamicBrands');
 END $$
@@ -600,3 +692,37 @@ LIMIT 20;
 
 SELECT *
 FROM vw_funnel_commercial_process;
+
+
+-- ============================================================
+-- EJECUCIÓN Y VALIDACIÓN FINAL
+-- ============================================================
+
+CALL sp_seed_dynamicbrands_all();
+
+SELECT COUNT(*) AS total_countries
+FROM countries;
+
+SELECT COUNT(*) AS total_products
+FROM products;
+
+SELECT COUNT(*) AS total_sites
+FROM sites;
+
+SELECT COUNT(*) AS total_product_publications
+FROM product_publications;
+
+SELECT COUNT(*) AS rows_vw_dynamic_sales
+FROM vw_dynamic_sales;
+
+SELECT *
+FROM vw_dynamic_sales
+LIMIT 20;
+
+SELECT *
+FROM vw_funnel_commercial_process;
+
+SELECT *
+FROM logs
+ORDER BY id DESC
+LIMIT 20;
