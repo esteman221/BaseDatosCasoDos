@@ -1,3 +1,5 @@
+# v1.2.4
+    * Corrección de SQL de ingreso de datos de Etheria.
 # v.1.2.3
     * Se subieron los archivos .zip para la importaciones del dashboard y conexion a Trino para superset.
     * Se modificó el Sql de llenado de datos y views para Dynamic Brands.
