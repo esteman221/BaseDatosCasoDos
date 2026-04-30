@@ -9,6 +9,6 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 RUN /app/.venv/bin/python -m ensurepip --upgrade || true
-RUN /app/.venv/bin/python -m pip install psycopg2-binary pymysql mysqlclient
+RUN /app/.venv/bin/python -m pip install psycopg2-binary pymysql mysqlclient sqlalchemy-trino trino
 
 USER superset

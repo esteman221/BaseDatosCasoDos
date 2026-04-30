@@ -1,7 +1,9 @@
+# v.1.1.1
+    * Se subió el readme.
 # v.1.1
     * Se hicieron modificaciones en docker-compose.yml y en su variante superset.
     * Se realizo un Dockerfile para juntar las bases de datos con el superset de forma sencilla.
-    * Se agrego en el repositorio los queries de llenado de datos y los queries de creacion de tablas.
+    * Se agrego en el repóositorio los queries de llenado de datos y los queries de creacion de tablas.
 # v.1.0
     * Se terminaron de implementar los cambios del profesor
     * Se agregó el archivo .yml del docker-compose con las siguientes imágenes

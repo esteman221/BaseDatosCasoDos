@@ -1,94 +1,126 @@
-
 services:
 
-    
+  # https://hub.docker.com/_/postgres/
+  postgres:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: EtheriaCasoDos
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d
+    networks:
+      - basedatoscasodos_default
 
-    # https://hub.docker.com/_/postgres/
-    postgres:
-        image: postgres:16
-        restart: always
-        ports:
-            - "5432:5432"
-        environment:
-            POSTGRES_USER: admin
-            POSTGRES_PASSWORD: 123
-            POSTGRES_DB: EtheriaCasoDos
-        volumes:
-            - postgres_data:/var/lib/postgresql/data
-
-
-    # https://docs.docker.com/guides/pgadmin/
-    pgadmin:
-        image: dpage/pgadmin4:9.8
-        restart: always
-        environment:
-            # Para ingresar
-            PGADMIN_DEFAULT_EMAIL: admin@correo.com
-            PGADMIN_DEFAULT_PASSWORD: 123
-
-            # Don't require the user to login
-            PGADMIN_CONFIG_SERVER_MODE: 'False'
-
-            # Don't require a "master" password after logging in
-            PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
-        ports:
-            - "80:80"
-        depends_on:
-            - postgres
-
-    
-    # https://hub.docker.com/_/mysql
-    mysql:
-        image: mysql
-        restart: always
-        ports:
-            - "3306:3306"
-        environment:
-            MYSQL_ROOT_PASSWORD: root
-            MYSQL_USER: admin
-            MYSQL_PASSWORD: 123
-            MYSQL_DATABASE: DynamicBrandsCasoDos
+  # https://hub.docker.com/_/mysql
+  mysql:
+    image: mysql:8.4
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: 123
+      MYSQL_DATABASE: DynamicBrandsCasoDos
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/init:/docker-entrypoint-initdb.d
+    networks:
+      - basedatoscasodos_default
 
 
+  # https://docs.docker.com/guides/pgadmin/
+  pgadmin:
+    image: dpage/pgadmin4:9.8
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@correo.com
+      PGADMIN_DEFAULT_PASSWORD: 123
+
+      # Don't require the user to login
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+
+      # Don't require a "master" password after logging in
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - basedatoscasodos_default
 
     # https://hub.docker.com/_/phpmyadmin
-    phpmyadmin:
-        image: phpmyadmin:latest
-        restart: always
-        ports:
-            - "8888:80"
-        depends_on:
+  phpmyadmin:
+    image: phpmyadmin:latest
+    restart: always
+    ports:
+        - "8888:80"
+    depends_on:
         - mysql
-        environment:
-            # when set to 1 connection to the arbitrary server will be allowed
-            PMA_ARBITRARY: 1
-            # define address/host name of the MySQL server
-            PMA_HOST: mysql
-            # define port of the MySQL server
-            PMA_PORT: 3306
-            # This variable is mandatory and specifies the password that will be set for the root superuser account
-            MYSQL_ROOT_PASSWORD: root
-            # These variables are optional, used in conjunction to create a new user and to set that user's password.
-            MYSQL_USER: admin
-            MYSQL_PASSWORD : 123
+    environment:
+        # when set to 1 connection to the arbitrary server will be allowed
+        PMA_ARBITRARY: 1
+        # define address/host name of the MySQL server
+        PMA_HOST: mysql
+        # define port of the MySQL server
+        PMA_PORT: 3306
+        # This variable is mandatory and specifies the password that will be set for the root superuser account
+        MYSQL_ROOT_PASSWORD: root
+        # These variables are optional, used in conjunction to create a new user and to set that user's password.
+        MYSQL_USER: admin
+        MYSQL_PASSWORD : 123
+    networks:
+        - basedatoscasodos_default
+
+  trino:
+    image: trinodb/trino:latest
+    restart: always
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./trino/catalog:/etc/trino/catalog
+    depends_on:
+      - postgres
+      - mysql
+    networks:
+      - basedatoscasodos_default
+
+  superset:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: superset
+    restart: always
+    ports:
+      - "8088:8088"
+    environment:
+      SUPERSET_ENV: development
+      SUPERSET_ADMIN_USERNAME: admin
+      SUPERSET_ADMIN_PASSWORD: admin
+      SUPERSET_ADMIN_FIRST_NAME: Admin
+      SUPERSET_ADMIN_LAST_NAME: User
+      SUPERSET_ADMIN_EMAIL: admin@example.com
+    volumes:
+      - ./superset:/app/superset_home
+      - ./superset_config.py:/app/pythonpath/superset_config.py
+      - ./init_superset.sh:/app/init_superset.sh
+    command: ["/bin/sh", "-c", "/app/init_superset.sh && superset run -h 0.0.0.0 -p 8088 --with-threads --reload --debugger"]
+    depends_on:
+      - postgres
+      - mysql
+      - trino
+    networks:
+      - basedatoscasodos_default
 
 volumes:
-    postgres_data:
+  postgres_data:
+  mysql_data:
 
-
-            
-
-
-    
-         
-
-
-    
-
-
-
-
-
-
-
-
+networks:
+  basedatoscasodos_default:
+    driver: bridge
