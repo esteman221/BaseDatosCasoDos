@@ -1,3 +1,5 @@
+# v.1.2.1
+    * Se subió el readme.
 # v.1.2
     * Se unio el docker entero.
     * Se agregaron properties para trino
