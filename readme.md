@@ -1,3 +1,8 @@
+# v.1.2
+    * Se unio el docker entero.
+    * Se agregaron properties para trino
+    * Se agrego trino al docker compose
+    
 # v.1.1.1
     * Se subió el readme.
 # v.1.1
