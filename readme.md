@@ -1,3 +1,5 @@
+# v1.2.4.5
+    * Se agrego un gitatributes para evitar problemas de docker compose.
 # v1.2.4.4
     * Se subio el archivo correcto del ingreso de datos de Etheria.
 # v1.2.4
