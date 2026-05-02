@@ -61,7 +61,6 @@ etheria_costs AS (
         cost_currency,
         cost_to_usd_rate,
         import_unit_cost,
-        import_unit_cost_usd,
         shipping_cost_usd,
         permits_cost_usd,
         total_landed_cost_usd
@@ -85,7 +84,6 @@ SELECT
     e.cost_currency,
     e.import_unit_cost,
     e.cost_to_usd_rate,
-    e.import_unit_cost_usd,
     e.shipping_cost_usd,
     e.permits_cost_usd,
     e.total_landed_cost_usd,
@@ -305,30 +303,6 @@ SELECT
 FROM unified_data
 GROUP BY dynamic_product_name, etheria_product_name, category_name, brand_name, site_name
 ORDER BY avg_profit_usd DESC;
-
-
--- ============================================================
--- 6. FUNNEL FEDERADO
--- Dataset Superset: federated_operational_funnel
--- Chart: Funnel Chart
--- Group by: stage
--- Metric: SUM(value)
--- ============================================================
-
-SELECT
-    stage,
-    value,
-    'Etheria' AS source
-FROM postgresql.etheria.vw_funnel_import_process
-
-UNION ALL
-
-SELECT
-    stage,
-    value,
-    'DynamicBrands' AS source
-FROM mysql.DynamicBrandsCasoDos.vw_funnel_commercial_process;
-
 
 -- ============================================================
 -- 7. KPI GENERAL DEL DASHBOARD

@@ -1,8 +1,10 @@
-# v1.2.4.5
+# v.1.2.5
+    * Modificacion del sql de Trino.
+# v.1.2.4.5
     * Se agrego un gitatributes para evitar problemas de docker compose.
-# v1.2.4.4
+# v.1.2.4.4
     * Se subio el archivo correcto del ingreso de datos de Etheria.
-# v1.2.4
+# v.1.2.4
     * Corrección de SQL de ingreso de datos de Etheria.
 # v.1.2.3
     * Se subieron los archivos .zip para la importaciones del dashboard y conexion a Trino para superset.
