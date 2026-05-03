@@ -1,17 +1,27 @@
+# v1.3
+    * Se revisó y documentó todos los querys de SP y Views de Etheria
+    * Se revisó y documentó todos los querys de SP y Views de DynamicBrands
+    * Corrección del readme
+
 # v.1.2.5
     * Modificacion del sql de Trino.
+    
 # v.1.2.4.5
     * Se agrego un gitatributes para evitar problemas de docker compose.
+
 # v.1.2.4.4
     * Se subio el archivo correcto del ingreso de datos de Etheria.
+
 # v.1.2.4
     * Corrección de SQL de ingreso de datos de Etheria.
+
 # v.1.2.3
     * Se subieron los archivos .zip para la importaciones del dashboard y conexion a Trino para superset.
     * Se modificó el Sql de llenado de datos y views para Dynamic Brands.
     * Se agregó el Sql para la creacion de las views en Trino.
 # v.1.2.1
     * Se subió el readme.
+
 # v.1.2
     * Se unió el docker entero.
     * Se agregaron properties para trino
@@ -19,10 +29,12 @@
     
 # v.1.1.1
     * Se subió el readme.
+
 # v.1.1
     * Se hicieron modificaciones en docker-compose.yml y en su variante superset.
     * Se realizo un Dockerfile para juntar las bases de datos con el superset de forma sencilla.
     * Se agrego en el repóositorio los queries de llenado de datos y los queries de creacion de tablas.
+
 # v.1.0
     * Se terminaron de implementar los cambios del profesor
     * Se agregó el archivo .yml del docker-compose con las siguientes imágenes
